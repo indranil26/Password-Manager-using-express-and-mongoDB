@@ -16,7 +16,7 @@ const Manager = () => {
     const [passwordArray, setpasswordArray] = useState([])
 
     const getPasswords = async () => {
-        let req = await fetch(`${API_URL}/`)
+        let req = await fetch(`${API_URL}`)
         let passwords = await req.json()
         // console.log(passwords)
         setpasswordArray(passwords)
@@ -58,12 +58,12 @@ const Manager = () => {
         if (form.site.length > 3 && form.username.length > 3 && form.password.length > 3) {
 
             // //If any such id exists in the database, delete it
-            // await fetch(`${API_URL}/`, {
+            // await fetch(`${API_URL}`, {
             //     method: "DELETE", headers: { "Content-Type": "application/json" },
             //     body: JSON.stringify({ id: form.id })
             // })
             setpasswordArray([...passwordArray, { ...form, id: uuidv4() }])
-            await fetch(`${API_URL}/`, {
+            await fetch(`${API_URL}`, {
                 method: "POST", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ...form, id: uuidv4() })
             })
@@ -94,7 +94,7 @@ const Manager = () => {
         if (conf) {
             setpasswordArray(passwordArray.filter(item => item.id !== id))
             // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
-            let res = await fetch(`${API_URL}/`, {
+            let res = await fetch(`${API_URL}`, {
                 method: "DELETE", headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id })
             })
@@ -115,7 +115,7 @@ const Manager = () => {
     const editPassword = async (id) => {
         // console.log("Editing password with id", id)
         //If any such id exists in the database, delete it
-        await fetch(`${API_URL}/`, {
+        await fetch(`${API_URL}`, {
             method: "DELETE", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: id })
         })
