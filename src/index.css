@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .mycontainer {
+    @apply mx-auto container px-40 max-w-6xl py-16 ;
+  }
+}
+
+
