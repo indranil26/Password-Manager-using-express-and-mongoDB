@@ -16,7 +16,6 @@ const Manager = () => {
     const [passwordArray, setpasswordArray] = useState([])
 
     const getPasswords = async () => {
-        console.log()
         let req = await fetch(`${API_URL}/`)
         let passwords = await req.json()
         // console.log(passwords)
@@ -113,14 +112,14 @@ const Manager = () => {
     }
 
 
-    const editPassword = async(id) => {
+    const editPassword = async (id) => {
         // console.log("Editing password with id", id)
-           //If any such id exists in the database, delete it
-           await fetch(`${API_URL}/`, {
+        //If any such id exists in the database, delete it
+        await fetch(`${API_URL}/`, {
             method: "DELETE", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: id })
         })
-        setform({...passwordArray.filter(i => i.id == id)[0], id:id})
+        setform({ ...passwordArray.filter(i => i.id == id)[0], id: id })
         setpasswordArray(passwordArray.filter(item => item.id !== id))
     }
 
