@@ -6,26 +6,69 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { FaEdit } from "react-icons/fa";
 import { RiDeleteBin6Fill } from "react-icons/ri";
-
+import { useAuth0 } from '@auth0/auth0-react'
+import axios from 'axios'
 
 const Manager = () => {
+    const { getAccessTokenSilently, isAuthenticated } = useAuth0();
     const API_URL = import.meta.env.VITE_API_URL;
     const ref = useRef()
     const passwordRef = useRef()
     const [form, setform] = useState({ site: "", username: "", password: "" })
     const [passwordArray, setpasswordArray] = useState([])
 
+    const validateForm = () => {
+        const urlRegex = /^(https?:\/\/)?(www\.)?([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,6}(\/)?$/;
+        const usernameRegex = /^[a-zA-Z0-9._-]{3,}$/; // Alphanumeric, dot, underscore, and hyphen allowed, minimum 3 characters
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?])[A-Za-z\d~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?]{8,}$/; // Minimum 8 characters, at least 1 uppercase letter, 1 lowercase letter, 1 number and 1 special character
+
+
+        if (!urlRegex.test(form.site)) {
+            toast.error('Invalid website URL', { theme: "dark" , draggable: false });
+            return false;
+        }
+
+        if (!usernameRegex.test(form.username)) {
+            toast.error('Invalid username', { theme: "dark" , draggable: false  });
+            return false;
+        }
+
+        if (!passwordRegex.test(form.password)) {
+            toast.error('Invalid password', { theme: "dark" , draggable: false  });
+            return false;
+        }
+
+        return true;
+    }
+
+
     const getPasswords = async () => {
-        let req = await fetch(`${API_URL}`)
-        let passwords = await req.json()
-        // console.log(passwords)
-        setpasswordArray(passwords)
+        if (isAuthenticated) {
+            try {
+                const token = await getAccessTokenSilently({ audience: import.meta.VITE_AUTH0_AUDIENCE })
+                // console.log(token)
+                let req = await axios.get(`${API_URL}/passwords`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    }
+                })
+
+                setpasswordArray(req.data)
+            } catch (error) {
+                console.error(error)
+            }
+
+            // console.log(passwords)
+        }
     }
 
     useEffect(() => {
-        getPasswords()
+        if (isAuthenticated) {
+            getPasswords()
+        }
 
-    }, [])
+    }, [isAuthenticated])
 
     const copyText = (text) => {
         toast('Copied to clipboard!', {
@@ -34,7 +77,7 @@ const Manager = () => {
             hideProgressBar: false,
             closeOnClick: true,
             pauseOnHover: true,
-            draggable: true,
+            draggable: false,
             progress: undefined,
             theme: "dark",
         });
@@ -55,78 +98,115 @@ const Manager = () => {
     }
 
     const savePassword = async () => {
-        if (form.site.length > 3 && form.username.length > 3 && form.password.length > 3) {
+        if (isAuthenticated) {
+            if (validateForm()) {
+                try {
+                    const token = await getAccessTokenSilently({ audience: import.meta.env.VITE_AUTH0_AUDIENCE })
+                    if (form.id) {
+                        await axios.put(`${API_URL}/passwords`, { ...form }, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`
+                            }
+                        })
+                        setpasswordArray(passwordArray.map(item => item.id === form.id ? form : item))
+                        setform({ site: "", username: "", password: "" })
+                        toast('Password updated!', {
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: false,
+                            progress: undefined,
+                            theme: "dark",
 
-            // //If any such id exists in the database, delete it
-            // await fetch(`${API_URL}`, {
-            //     method: "DELETE", headers: { "Content-Type": "application/json" },
-            //     body: JSON.stringify({ id: form.id })
-            // })
-            setpasswordArray([...passwordArray, { ...form, id: uuidv4() }])
-            await fetch(`${API_URL}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ ...form, id: uuidv4() })
-            })
-            // console.log([...passwordArray, { ...form, id: uuidv4() }])
-            // localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...form, id: uuidv4() }]))
-            // console.log([...passwordArray, form])
-            setform({ site: "", username: "", password: "" })
-            toast('Password saved!', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "dark",
-            });
+                        });
+                    }
+                    else {
+                        const newPassword = { ...form, id: uuidv4() }
+                        await axios.post(`${API_URL}/passwords`, newPassword, {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`
+                            }
+                        })
+                        setpasswordArray([...passwordArray, newPassword])
+                        setform({ site: "", username: "", password: "" })
+                        toast('Password saved!', {
+                            position: "top-right",
+                            autoClose: 5000,
+                            hideProgressBar: false,
+                            closeOnClick: true,
+                            pauseOnHover: true,
+                            draggable: false,
+                            progress: undefined,
+                            theme: "dark",
+
+                        });
+                    }
+                } catch (error) {
+                    console.log(error.message)
+                }
+            }
+            else {
+                toast("Error: Password not saved!",{ draggable: false })
+            }
         }
         else {
-            toast("Error: Password not saved!")
+            alert("Please login to add password")
         }
     }
 
 
     const deletePassword = async (id) => {
-        // console.log("Deleting password with id", id)
-        let conf = confirm("Do you really want to delete this password?")
-        if (conf) {
-            setpasswordArray(passwordArray.filter(item => item.id !== id))
-            // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
-            let res = await fetch(`${API_URL}`, {
-                method: "DELETE", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ id })
-            })
-            toast('Password Deleted!', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "dark",
-            });
+        if (isAuthenticated) {
+            // console.log("Deleting password with id", id)
+            let conf = confirm("Do you really want to delete this password?")
+            if (conf) {
+                try {
+                    const token = await getAccessTokenSilently({ audience: import.meta.VITE_AUTH0_AUDIENCE })
+                    await axios.delete(`${API_URL}/passwords`, {
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                        },
+                        data: { id },
+                    })
+                } catch (error) {
+                    console.log(error)
+                }
+
+                setpasswordArray(passwordArray.filter(item => item.id !== id))
+                // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter(item => item.id !== id)))
+
+                toast('Password Deleted!', {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: false,
+                    progress: undefined,
+                    theme: "dark",
+                });
+            }
         }
     }
 
 
     const editPassword = async (id) => {
-        // console.log("Editing password with id", id)
-        //If any such id exists in the database, delete it
-        await fetch(`${API_URL}`, {
-            method: "DELETE", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: id })
-        })
-        setform({ ...passwordArray.filter(i => i.id == id)[0], id: id })
-        setpasswordArray(passwordArray.filter(item => item.id !== id))
+        if (isAuthenticated) {
+            const passwordToEdit = passwordArray.find(item => item.id === id)
+            setform(passwordToEdit)
+        }
     }
 
 
     const handleChange = (e) => {
         setform({ ...form, [e.target.name]: e.target.value })
         // console.log(passwordArray)
+
     }
 
 
@@ -142,8 +222,7 @@ const Manager = () => {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="light"
-                transition="Bounce" />
+                theme="light" />
             {/* Same as */}
             <ToastContainer />
             <div className="absolute inset-0 -z-10 h-full w-full bg-green-50 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"><div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-green-400 opacity-20 blur-[100px]"></div></div>

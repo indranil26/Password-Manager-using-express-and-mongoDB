@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth0 } from '@auth0/auth0-react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/icons/vite.svg'
 import './App.css'
@@ -7,8 +8,6 @@ import Manager from './components/Manager'
 import Footer from './components/Footer'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
    <>
    <Navbar/>
