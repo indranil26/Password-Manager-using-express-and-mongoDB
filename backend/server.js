@@ -27,44 +27,44 @@ app.use(authCheck)
     
 client.connect();
 
-const validateSite = (site) => {
-    // Adjust the regex based on your requirements
-    const siteRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Example for valid domains
-    return siteRegex.test(site);
-  };
+// const validateSite = (site) => {
+//     // Adjust the regex based on your requirements
+//     const siteRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // Example for valid domains
+//     return siteRegex.test(site);
+//   };
   
-  const validateUsername = (username) => {
-    // Example: allow alphanumeric characters and underscores, minimum 3 characters
-    const usernameRegex = /^[a-zA-Z0-9_]{3,}$/; 
-    return usernameRegex.test(username);
-  };
+//   const validateUsername = (username) => {
+//     // Example: allow alphanumeric characters and underscores, minimum 3 characters
+//     const usernameRegex = /^[a-zA-Z0-9_]{3,}$/; 
+//     return usernameRegex.test(username);
+//   };
   
-  const validatePassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?])[A-Za-z\d~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?]{8,}$/;
-    return passwordRegex.test(password);
-  };
+//   const validatePassword = (password) => {
+//     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?])[A-Za-z\d~`!@#$%^&*()_\-+={}[\]|\\;:"'<>,./?]{8,}$/;
+//     return passwordRegex.test(password);
+//   };
 
-  const validatePasswordInput = (req, res, next) => {
-    const { site, username, password } = req.body;
+//   const validatePasswordInput = (req, res, next) => {
+//     const { site, username, password } = req.body;
   
-    // Check if site is valid
-    if (!validateSite(site)) {
-      return res.status(400).json({ success: false, error: 'Invalid site format' });
-    }
+//     // Check if site is valid
+//     if (!validateSite(site)) {
+//       return res.status(400).json({ success: false, error: 'Invalid site format' });
+//     }
   
-    // Check if username is valid
-    if (!validateUsername(username)) {
-      return res.status(400).json({ success: false, error: 'Invalid username format' });
-    }
+//     // Check if username is valid
+//     if (!validateUsername(username)) {
+//       return res.status(400).json({ success: false, error: 'Invalid username format' });
+//     }
   
-    // Check if password is valid
-    if (!validatePassword(password)) {
-      return res.status(400).json({ success: false, error: 'Invalid password format. Must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character.' });
-    }
+//     // Check if password is valid
+//     if (!validatePassword(password)) {
+//       return res.status(400).json({ success: false, error: 'Invalid password format. Must contain at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 digit, and 1 special character.' });
+//     }
   
-    // If all validations pass, proceed to the next middleware
-    next();
-  };
+//     // If all validations pass, proceed to the next middleware
+//     next();
+//   };
 
 
 app.get('/passwords', async (req, res) => {
@@ -80,7 +80,7 @@ app.get('/passwords', async (req, res) => {
     res.json(decryptedPassowrd)
 })
 
-app.post('/passwords', validatePasswordInput ,async (req, res) => {
+app.post('/passwords',async (req, res) => {
     const encryptedPassword=encrypt(req.body.password)
     const encryptedUserId=encrypt(req.auth.payload.sub)
     const password={...req.body, password:encryptedPassword, user_id: encryptedUserId}
@@ -90,7 +90,7 @@ app.post('/passwords', validatePasswordInput ,async (req, res) => {
     res.send({success:true, result: findResult})
 })
 
-app.put('/passwords', validatePasswordInput ,async (req, res) => {
+app.put('/passwords', async (req, res) => {
     const { id, site, username, password } = req.body;
     const encryptedPassword=encrypt(password)
     const encryptedUserId=encrypt(req.auth.payload.sub)
