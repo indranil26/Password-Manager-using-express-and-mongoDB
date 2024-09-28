@@ -23,7 +23,7 @@ app.use(cors())
         tokenSigningAlg: 'RS256',        
         }) 
    
-app.use(authCheck)
+// app.use(authCheck)
     
 client.connect();
 
@@ -66,8 +66,11 @@ client.connect();
 //     next();
 //   };
 
+app.get('/', (req, res) => {
+    res.send('Express app is running!')
+})
 
-app.get('/passwords', async (req, res) => {
+app.get('/passwords', authCheck, async (req, res) => {
     const db = client.db(dbName);
     const collection = db.collection('passwords');
     const userId=req.auth.payload.sub
@@ -80,7 +83,7 @@ app.get('/passwords', async (req, res) => {
     res.json(decryptedPassowrd)
 })
 
-app.post('/passwords',async (req, res) => {
+app.post('/passwords', authCheck,async (req, res) => {
     const encryptedPassword=encrypt(req.body.password)
     const encryptedUserId=encrypt(req.auth.payload.sub)
     const password={...req.body, password:encryptedPassword, user_id: encryptedUserId}
@@ -90,7 +93,7 @@ app.post('/passwords',async (req, res) => {
     res.send({success:true, result: findResult})
 })
 
-app.put('/passwords', async (req, res) => {
+app.put('/passwords', authCheck, async (req, res) => {
     const { id, site, username, password } = req.body;
     const encryptedPassword=encrypt(password)
     const encryptedUserId=encrypt(req.auth.payload.sub)
@@ -108,7 +111,7 @@ app.put('/passwords', async (req, res) => {
     }
 });
 
-app.delete('/passwords', async (req, res) => {
+app.delete('/passwords', authCheck, async (req, res) => {
     const {id}=req.body
     const encryptedUserId=encrypt(req.auth.payload.sub)
     const db = client.db(dbName);
